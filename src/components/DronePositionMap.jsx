@@ -80,9 +80,9 @@ const DronePositionMap = ({ onLog }) => {
                     path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
                     scale: 6,
                     rotation: 0,
-                    strokeColor: "#4ade80",
+                    strokeColor: "#ef4444",
                     strokeWeight: 2,
-                    fillColor: "#4ade80",
+                    fillColor: "#ef4444",
                     fillOpacity: 1,
                 }
             });
@@ -90,7 +90,7 @@ const DronePositionMap = ({ onLog }) => {
 
             const polyline = new window.google.maps.Polyline({
                 map,
-                strokeColor: "#4ade80",
+                strokeColor: "#ef4444",
                 strokeOpacity: 0.6,
                 strokeWeight: 3,
             });
@@ -110,9 +110,9 @@ const DronePositionMap = ({ onLog }) => {
                 path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
                 scale: 6,
                 rotation: droneState.heading,
-                strokeColor: "#4ade80",
+                strokeColor: "#ef4444",
                 strokeWeight: 2,
-                fillColor: "#4ade80",
+                fillColor: "#ef4444",
                 fillOpacity: 1,
             };
             droneMarkerRef.current.setIcon(symbol);
@@ -204,12 +204,12 @@ const DronePositionMap = ({ onLog }) => {
 
                     {/* Location Label */}
                     <div className="absolute bottom-2 left-2 bg-[#1a1a1a]/90 backdrop-blur px-2 py-1 rounded text-[10px] text-gray-400 z-10">
-                        <span className="text-white font-medium">SOUTH BOSTON</span>
+                        <span className="text-white font-medium">GPS POSITION</span>
                         <div className="flex items-center gap-1 mt-0.5">
                             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                             </svg>
-                            <span>{droneState.lat.toFixed(4)}, {droneState.lon.toFixed(4)}</span>
+                            <span>{droneState.lat?.toFixed(6) || '0.000000'}, {droneState.lon?.toFixed(6) || '0.000000'}</span>
                         </div>
                     </div>
                 </div>
@@ -217,10 +217,10 @@ const DronePositionMap = ({ onLog }) => {
                 {/* Stats Section */}
                 <div className="flex-1 p-3 flex flex-col justify-center">
                     <div className="grid grid-cols-3 gap-x-6 gap-y-3">
-                        {/* Speed */}
+                        {/* Speed (Throttle) */}
                         <div>
                             <p className="text-gray-500 text-[10px] uppercase">Speed</p>
-                            <p className="text-white font-bold text-sm">{(droneState.speed * 3.6).toFixed(0)} km/h</p>
+                            <p className="text-white font-bold text-sm">{droneState.throttle || 0}%</p>
                         </div>
                         {/* Lens - Interactive */}
                         <div>
@@ -237,10 +237,10 @@ const DronePositionMap = ({ onLog }) => {
                             <p className="text-white font-bold text-sm">{selectedResolution.replace(':', 'x')}</p>
                         </div>
 
-                        {/* Height */}
+                        {/* Height (Altitude) */}
                         <div>
                             <p className="text-gray-500 text-[10px] uppercase">Height</p>
-                            <p className="text-white font-bold text-sm">{droneState.alt.toFixed(0)}m</p>
+                            <p className="text-white font-bold text-sm">{droneState.alt?.toFixed(0) || 0}m</p>
                         </div>
                         {/* ISO - Interactive */}
                         <div>

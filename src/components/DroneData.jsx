@@ -54,8 +54,7 @@ const DroneData = ({ onLog }) => {
             <div className="p-4 border-b border-[#2a2a2a]">
                 <div className="flex items-start justify-between">
                     <div>
-                        <h2 className="text-white font-bold text-lg">DJI Mavic Pro</h2>
-                        <p className="text-gray-500 text-xs mt-0.5">FHD High-Framerate Live Feed</p>
+                        <h2 className="text-white font-bold text-lg">VITATWIN</h2>
                     </div>
                     <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${connectionStatus === 'CONNECTED' ? 'bg-green-500/20 text-green-400' :
                             connectionStatus === 'ERROR' ? 'bg-red-500/20 text-red-400' :

@@ -6,9 +6,9 @@ const WS_PORT = 8081;
 
 // ================================
 // MOCK SIMULATION MODE
-// Set to true to simulate drone flight without real telemetry
+// Set to false to wait for real MAVLink data from Mission Planner
 // ================================
-const MOCK_MODE = !process.argv.includes('--real');
+const MOCK_MODE = false; // Disabled - waiting for real data
 
 // Create UDP socket to receive MAVLink telemetry
 const udp = dgram.createSocket("udp4");
