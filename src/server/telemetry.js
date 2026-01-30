@@ -56,6 +56,17 @@ const FLIGHT_MODES = {
     27: "AUTO_RTL",
 };
 
+// GPS Fix Type lookup
+const GPS_FIX_TYPES = {
+    0: "NO_GPS",
+    1: "NO_FIX",
+    2: "2D_FIX",
+    3: "3D_FIX",
+    4: "DGPS",
+    5: "RTK_FLOAT",
+    6: "RTK_FIXED",
+};
+
 // Broadcast data to all connected browser clients
 function broadcast(data) {
     const json = JSON.stringify(data);
@@ -90,6 +101,16 @@ if (MOCK_MODE) {
     let heading = 0;
     let missionPhase = "TAKEOFF"; // TAKEOFF, AUTO, RTL, LAND
     let armed = false;
+    let flightStartTime = null;
+
+    // Battery simulation
+    let batteryPercent = 100;
+    let batteryVoltage = 16.8; // 4S LiPo fully charged
+
+    // Attitude simulation
+    let roll = 0;
+    let pitch = 0;
+    let yaw = 0;
 
     // Send waypoints to browser on first client connection
     wss.on("connection", () => {
@@ -126,11 +147,28 @@ if (MOCK_MODE) {
         const dLng = targetWp.lng - currentLng;
         const distance = Math.sqrt(dLat * dLat + dLng * dLng);
 
+        // Drain battery slowly
+        if (armed && batteryPercent > 5) {
+            batteryPercent -= 0.02;
+            batteryVoltage = 14.0 + (batteryPercent / 100) * 2.8; // 14.0V empty to 16.8V full
+        }
+
+        // Simulate attitude changes during flight
+        if (missionPhase === "AUTO" || missionPhase === "RTL") {
+            roll = Math.sin(Date.now() / 1000) * 5; // Slight roll oscillation
+            pitch = -3 + Math.random() * 2; // Slight forward pitch
+            yaw = heading;
+        } else {
+            roll = 0;
+            pitch = 0;
+        }
+
         // State machine for flight phases
         switch (missionPhase) {
             case "TAKEOFF":
                 if (!armed) {
                     armed = true;
+                    flightStartTime = Date.now();
                     broadcast({ type: "status_text", severity: 6, text: "Arming motors" });
                 }
                 currentAlt += 2;
@@ -195,11 +233,16 @@ if (MOCK_MODE) {
                         currentWaypointIndex = 0;
                         currentLat = waypoints[0].lat;
                         currentLng = waypoints[0].lng;
+                        batteryPercent = 100;
+                        batteryVoltage = 16.8;
                         broadcast({ type: "status_text", severity: 6, text: "Starting new mission..." });
                     }, 5000);
                 }
                 break;
         }
+
+        // Calculate flight time
+        const flightTime = flightStartTime ? Math.floor((Date.now() - flightStartTime) / 1000) : 0;
 
         // Broadcast position
         broadcast({
@@ -213,12 +256,56 @@ if (MOCK_MODE) {
         });
 
         // Broadcast heartbeat
-        const modeMap = { TAKEOFF: 3, AUTO: 3, RTL: 6, LAND: 9 };
         broadcast({
             type: "heartbeat",
             mode: missionPhase === "TAKEOFF" ? "AUTO" : missionPhase,
             armed: armed,
             systemStatus: 4,
+        });
+
+        // Broadcast battery status (SYS_STATUS equivalent)
+        broadcast({
+            type: "battery",
+            voltage: batteryVoltage,
+            current: armed ? 15.5 : 0, // 15.5A when flying
+            remaining: Math.round(batteryPercent),
+        });
+
+        // Broadcast GPS status
+        broadcast({
+            type: "gps",
+            fixType: 3, // 3D Fix
+            satellites: 14,
+            hdop: 0.8,
+        });
+
+        // Broadcast attitude
+        broadcast({
+            type: "attitude",
+            roll: roll,
+            pitch: pitch,
+            yaw: yaw,
+        });
+
+        // Broadcast VFR HUD data
+        broadcast({
+            type: "vfr_hud",
+            airspeed: missionPhase === "AUTO" || missionPhase === "RTL" ? 8.5 : 0,
+            groundspeed: missionPhase === "AUTO" || missionPhase === "RTL" ? 8.5 : 0,
+            throttle: armed ? 55 : 0,
+            climbRate: missionPhase === "TAKEOFF" ? 2.0 : missionPhase === "LAND" ? -3.0 : 0,
+        });
+
+        // Broadcast flight time
+        broadcast({
+            type: "flight_time",
+            seconds: flightTime,
+        });
+
+        // Broadcast current waypoint
+        broadcast({
+            type: "mission_current",
+            seq: currentWaypointIndex,
         });
 
     }, 500);
@@ -232,8 +319,66 @@ if (MOCK_MODE) {
     udp.on("message", (msg) => {
         const msgId = msg[5];
 
+        // HEARTBEAT (ID: 0)
+        if (msgId === 0) {
+            const customMode = msg.readUInt32LE(6);
+            const baseMode = msg[12];
+            const armed = (baseMode & 0x80) !== 0;
+            const modeName = FLIGHT_MODES[customMode] || `MODE_${customMode}`;
+
+            broadcast({
+                type: "heartbeat",
+                mode: modeName,
+                armed,
+                systemStatus: msg[13],
+            });
+        }
+
+        // SYS_STATUS (ID: 1) - Battery info
+        else if (msgId === 1) {
+            const voltage = msg.readUInt16LE(14) / 1000; // mV to V
+            const current = msg.readInt16LE(16) / 100;   // cA to A
+            const remaining = msg[30];                    // Battery remaining %
+
+            broadcast({
+                type: "battery",
+                voltage,
+                current,
+                remaining,
+            });
+        }
+
+        // GPS_RAW_INT (ID: 24) - GPS status
+        else if (msgId === 24) {
+            const fixType = msg[28];
+            const satellites = msg[29];
+            const hdop = msg.readUInt16LE(22) / 100;
+
+            broadcast({
+                type: "gps",
+                fixType,
+                fixTypeName: GPS_FIX_TYPES[fixType] || "UNKNOWN",
+                satellites,
+                hdop,
+            });
+        }
+
+        // ATTITUDE (ID: 30) - Roll/Pitch/Yaw
+        else if (msgId === 30) {
+            const roll = msg.readFloatLE(6) * (180 / Math.PI);   // rad to deg
+            const pitch = msg.readFloatLE(10) * (180 / Math.PI);
+            const yaw = msg.readFloatLE(14) * (180 / Math.PI);
+
+            broadcast({
+                type: "attitude",
+                roll,
+                pitch,
+                yaw,
+            });
+        }
+
         // GLOBAL_POSITION_INT (ID: 33) - Live GPS position
-        if (msgId === 33) {
+        else if (msgId === 33) {
             const lat = msg.readInt32LE(10) / 1e7;
             const lon = msg.readInt32LE(14) / 1e7;
             const alt = msg.readInt32LE(18) / 1000;
@@ -253,18 +398,19 @@ if (MOCK_MODE) {
             });
         }
 
-        // HEARTBEAT (ID: 0)
-        else if (msgId === 0) {
-            const customMode = msg.readUInt32LE(6);
-            const baseMode = msg[12];
-            const armed = (baseMode & 0x80) !== 0;
-            const modeName = FLIGHT_MODES[customMode] || `MODE_${customMode}`;
-
+        // MISSION_COUNT (ID: 44)
+        else if (msgId === 44) {
             broadcast({
-                type: "heartbeat",
-                mode: modeName,
-                armed,
-                systemStatus: msg[13],
+                type: "mission_count",
+                count: msg.readUInt16LE(6),
+            });
+        }
+
+        // MISSION_CURRENT (ID: 42)
+        else if (msgId === 42) {
+            broadcast({
+                type: "mission_current",
+                seq: msg.readUInt16LE(6),
             });
         }
 
@@ -285,11 +431,23 @@ if (MOCK_MODE) {
             });
         }
 
-        // MISSION_COUNT (ID: 44)
-        else if (msgId === 44) {
+        // VFR_HUD (ID: 74) - Speed, throttle, climb
+        else if (msgId === 74) {
+            const airspeed = msg.readFloatLE(6);
+            const groundspeed = msg.readFloatLE(10);
+            const heading = msg.readInt16LE(18);
+            const throttle = msg.readUInt16LE(20);
+            const alt = msg.readFloatLE(14);
+            const climbRate = msg.readFloatLE(22);
+
             broadcast({
-                type: "mission_count",
-                count: msg.readUInt16LE(6),
+                type: "vfr_hud",
+                airspeed,
+                groundspeed,
+                heading,
+                throttle,
+                alt,
+                climbRate,
             });
         }
 

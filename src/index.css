@@ -4,33 +4,67 @@
 
 :root {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    --bg-texture: url("https://www.transparenttextures.com/patterns/cubes.png");
-    /* Optional subtle texture if needed, using solid for now */
+    --color-bg-primary: #0d0d0d;
+    --color-bg-secondary: #1a1a1a;
+    --color-bg-card: #1e1e1e;
+    --color-border: #2a2a2a;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #a0a0a0;
+    --color-accent: #00ff88;
 }
 
 @layer base {
     body {
-        background-color: #e5e9f2;
-        /* Light slate grey background */
-        color: #1f2937;
+        background-color: var(--color-bg-primary);
+        color: var(--color-text-primary);
     }
 }
 
 @layer components {
 
-    /* Dashboard Card Style */
+    /* Dashboard Card Style - Dark Theme */
     .dashboard-card {
-        @apply bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col;
+        @apply bg-[#1e1e1e] rounded-2xl border border-[#2a2a2a] overflow-hidden flex flex-col;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
-    /* Card Header Style */
+    /* Card Header Style - Dark */
     .card-header {
-        @apply bg-slate-800 text-white px-3 py-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide border-b border-slate-700;
+        @apply bg-[#252525] text-white px-4 py-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide border-b border-[#2a2a2a];
     }
 
-    /* 3D Button Styles */
+    /* Glass Effect Panel */
+    .glass-panel {
+        @apply bg-[#1a1a1a]/80 backdrop-blur-md rounded-xl border border-[#333];
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+        @apply bg-[#0d0d0d] border-r border-[#1a1a1a] flex flex-col items-center py-4 gap-4;
+    }
+
+    .sidebar-icon {
+        @apply w-10 h-10 flex items-center justify-center rounded-xl text-[#666] hover:text-white hover:bg-[#1e1e1e] transition-all cursor-pointer;
+    }
+
+    .sidebar-icon.active {
+        @apply text-white bg-[#1e1e1e];
+    }
+
+    /* 3D Button Styles - Dark */
     .btn-3d {
-        @apply transition-all active:translate-y-0.5 active:shadow-none shadow-[0_4px_0_0_rgba(0, 0, 0, 0.2)];
+        @apply transition-all active:translate-y-0.5 active:shadow-none;
+        box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.4);
+    }
+
+    /* Control Button */
+    .control-btn {
+        @apply bg-[#2a2a2a] hover:bg-[#333] text-white rounded-full flex items-center justify-center transition-all;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        @apply px-2 py-1 rounded text-xs font-bold uppercase;
     }
 }
 
@@ -41,6 +75,10 @@
 
     .font-eurostile {
         font-family: 'Eurostile', 'Microgramma', sans-serif;
+    }
+
+    .text-glow {
+        text-shadow: 0 0 10px currentColor;
     }
 }
 
@@ -53,5 +91,14 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
     }
 }

@@ -1,6 +1,5 @@
-import TopNavBar from './components/TopNavBar';
+import Sidebar from './components/Sidebar';
 import LiveCameraView from './components/LiveCameraView';
-import AIDetectionStatus from './components/AIDetectionStatus';
 import DroneData from './components/DroneData';
 import DronePositionMap from './components/DronePositionMap';
 import ManualControls from './components/ManualControls';
@@ -10,7 +9,7 @@ import SettingsView from './components/SettingsView';
 import { useState, useCallback } from 'react';
 
 function App() {
-    const [currentView, setCurrentView] = useState('Home'); // Home, Data, Settings
+    const [currentView, setCurrentView] = useState('Home'); // Home, Video, Settings
     const [activityLogs, setActivityLogs] = useState([
         { timestamp: '14:02', message: '- Payload successfully dropped.', type: 'info' },
         { timestamp: '14:02', message: '- Human detected at distance 6.3 m.', type: 'success' },
@@ -34,13 +33,13 @@ function App() {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#e2e8f0] text-slate-800 font-sans">
+        <div className="h-screen w-screen flex overflow-hidden bg-[#0d0d0d] text-white font-sans">
 
-            {/* Top Navigation Bar */}
-            <TopNavBar activeNav={currentView} onNavChange={setCurrentView} />
+            {/* Left Sidebar */}
+            <Sidebar activeNav={currentView} onNavChange={setCurrentView} />
 
             {/* Main Content Area */}
-            <div className="flex-1 p-4 overflow-hidden relative z-10 flex flex-col min-h-0">
+            <div className="flex-1 p-4 overflow-hidden relative flex flex-col min-h-0 gap-4">
 
                 {/* DASHBOARD VIEW */}
                 {currentView === 'Home' && (
@@ -48,38 +47,38 @@ function App() {
                         {/* Top Section - 60% height */}
                         <div className="flex gap-4 h-[60%] min-h-0">
                             {/* LEFT: Live Camera View */}
-                            <div className="w-[67%] h-full">
+                            <div className="flex-1 h-full">
                                 <LiveCameraView onLog={handleLog} />
                             </div>
 
-                            {/* RIGHT: Status Panels */}
-                            <div className="w-[33%] h-full flex flex-col gap-4">
-                                <div className="h-[45%] min-h-0">
-                                    <AIDetectionStatus />
-                                </div>
-                                <div className="h-[55%] min-h-0">
-                                    <DroneData />
-                                </div>
+                            {/* RIGHT: Drone Info Panel */}
+                            <div className="w-[280px] h-full shrink-0">
+                                <DroneData onLog={handleLog} />
                             </div>
                         </div>
 
                         {/* Bottom Section - 40% height */}
                         <div className="flex gap-4 h-[40%] min-h-0">
-                            <div className="w-[35%] h-full">
-                                <DronePositionMap />
+                            {/* Map + Telemetry Stats */}
+                            <div className="flex-1 h-full">
+                                <DronePositionMap onLog={handleLog} />
                             </div>
-                            <div className="w-[30%] h-full">
-                                <ManualControls />
+
+                            {/* D-Pad Controls */}
+                            <div className="w-[280px] h-full shrink-0">
+                                <ManualControls onLog={handleLog} />
                             </div>
-                            <div className="w-[35%] h-full">
+
+                            {/* Activity Logs */}
+                            <div className="w-[320px] h-full shrink-0">
                                 <ActivityLog externalLogs={activityLogs} />
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* DATA VIEW */}
-                {currentView === 'Data' && (
+                {/* VIDEO VIEW */}
+                {currentView === 'Video' && (
                     <DataView logs={activityLogs} />
                 )}
 
