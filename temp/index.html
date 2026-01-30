@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drone Monitor - Live Telemetry</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body>
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Status Panel -->
+  <div id="status-panel">
+    <div class="panel-header">
+      <h2>🛸 Drone Monitor</h2>
+      <span id="connection-status" class="disconnected">DISCONNECTED</span>
+    </div>
+
+    <div class="status-grid">
+      <div class="status-item">
+        <span class="label">Flight Mode</span>
+        <span id="mode" class="value">--</span>
+      </div>
+      <div class="status-item">
+        <span class="label">Status</span>
+        <span id="armed" class="value disarmed">--</span>
+      </div>
+      <div class="status-item">
+        <span class="label">Altitude</span>
+        <span id="altitude" class="value">-- m</span>
+      </div>
+      <div class="status-item">
+        <span class="label">Speed</span>
+        <span id="speed" class="value">-- m/s</span>
+      </div>
+      <div class="status-item">
+        <span class="label">Heading</span>
+        <span id="heading" class="value">--°</span>
+      </div>
+    </div>
+
+    <div class="coordinates">
+      <div class="coord-item">
+        <span class="label">Latitude</span>
+        <span id="lat" class="value mono">--</span>
+      </div>
+      <div class="coord-item">
+        <span class="label">Longitude</span>
+        <span id="lon" class="value mono">--</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="clear-path">Clear Flight Path</button>
+    </div>
+
+    <div class="status-log-container">
+      <span class="label">Status Messages</span>
+      <div id="status-log"></div>
+    </div>
+  </div>
+
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMQSvJGd8wPXETajx-F6RTLc9YspTZASw"></script>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --bg-texture: url("https://www.transparenttextures.com/patterns/cubes.png");
+    /* Optional subtle texture if needed, using solid for now */
+}
+
+@layer base {
+    body {
+        background-color: #e5e9f2;
+        /* Light slate grey background */
+        color: #1f2937;
+    }
+}
+
+@layer components {
+
+    /* Dashboard Card Style */
+    .dashboard-card {
+        @apply bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col;
+    }
+
+    /* Card Header Style */
+    .card-header {
+        @apply bg-slate-800 text-white px-3 py-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide border-b border-slate-700;
+    }
+
+    /* 3D Button Styles */
+    .btn-3d {
+        @apply transition-all active:translate-y-0.5 active:shadow-none shadow-[0_4px_0_0_rgba(0, 0, 0, 0.2)];
+    }
+}
+
+@layer utilities {
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .font-eurostile {
+        font-family: 'Eurostile', 'Microgramma', sans-serif;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
